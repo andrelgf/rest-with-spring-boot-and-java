@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.example.restwithspringbootandjava.model.Person;
+
+import com.example.restwithspringbootandjava.dto.v1.PersonDTO;
 import com.example.restwithspringbootandjava.services.PersonService;
 
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,22 +24,22 @@ public class PersonController {
     private PersonService personService;
 
     @GetMapping()
-    public List<Person> findAll() {
+    public List<PersonDTO> findAll() {
         return personService.findAll();
     }
 
     @GetMapping(value = "/{id}")
-    public Person findById(@PathVariable(value = "id") Long id) {
+    public PersonDTO findById(@PathVariable(value = "id") Long id) {
         return personService.findById(id);
     }
 
     @PostMapping()
-    public Person create(@RequestBody Person person) {
+    public PersonDTO create(@RequestBody PersonDTO person) {
         return personService.create(person);
     }
 
     @PutMapping()
-    public Person update(@RequestBody Person person) {
+    public PersonDTO update(@RequestBody PersonDTO person) {
         return personService.update(person);
     }
 

@@ -6,8 +6,9 @@ import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.restwithspringbootandjava.dto.v1.PersonDTO;
 import com.example.restwithspringbootandjava.exceptions.ResourceNotFoundException;
-import com.example.restwithspringbootandjava.model.Person;
+import com.example.restwithspringbootandjava.mapper.PersonMapper;
 import com.example.restwithspringbootandjava.repositories.PersonRepository;
 
 
@@ -20,24 +21,29 @@ public class PersonService {
 
     @Autowired
     private PersonRepository personRepository;
+    @Autowired
+    private PersonMapper personMapper;
 
-    public Person findById(Long id){
+    public PersonDTO findById(Long id){
         logger.info("finding person with Id: " + id);
-        return personRepository.findById(id)
+        var entity = personRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException("no records found for this ID"));
+        return personMapper.personToPersonDTO(entity);
     }
 
-    public List<Person> findAll(){
+    public List<PersonDTO> findAll(){
         logger.info("listing all people");
-        return personRepository.findAll();
+        return personMapper.personListToPersonDTOList(personRepository.findAll());
     }
 
-    public Person create(Person person){
+    public PersonDTO create(PersonDTO person){
         logger.info("creating person with name: " + person.getFirstName());
-        return personRepository.save(person);
+        var entity = personMapper.personDTOtoPerson(person);
+        personRepository.save(entity);
+        return personMapper.personToPersonDTO(entity);
     }
 
-    public Person update(Person person){
+    public PersonDTO update(PersonDTO person){
         logger.info("updating person with Id: " + person.getId());
 
         var entity = personRepository.findById(person.getId())
@@ -48,7 +54,9 @@ public class PersonService {
         entity.setAddress(person.getAddress());
         entity.setGender(person.getGender());
 
-        return personRepository.save(entity);
+        personRepository.save(entity);
+
+        return personMapper.personToPersonDTO(entity);
     }
 
     public void delete(Long id){
