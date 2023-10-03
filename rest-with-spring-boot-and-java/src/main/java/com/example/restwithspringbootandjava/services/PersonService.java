@@ -4,8 +4,11 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import org.springframework.stereotype.Service;
 
+import com.example.restwithspringbootandjava.controllers.PersonController;
 import com.example.restwithspringbootandjava.dto.v1.PersonDTO;
 import com.example.restwithspringbootandjava.exceptions.ResourceNotFoundException;
 import com.example.restwithspringbootandjava.mapper.PersonMapper;
@@ -28,25 +31,32 @@ public class PersonService {
         logger.info("finding person with Id: " + id);
         var entity = personRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException("no records found for this ID"));
-        return personMapper.personToPersonDTO(entity);
+        var personDto = personMapper.personToPersonDTO(entity);
+        personDto.add(linkTo(methodOn(PersonController.class).findById(id)).withSelfRel());
+        return personDto;
     }
 
     public List<PersonDTO> findAll(){
         logger.info("listing all people");
-        return personMapper.personListToPersonDTOList(personRepository.findAll());
+        var persons = personMapper.personListToPersonDTOList(personRepository.findAll());
+        persons.
+        stream()
+        .forEach(p -> p.add(linkTo(methodOn(PersonController.class).findById(p.getKey())).withSelfRel()));
+        return persons;
     }
 
     public PersonDTO create(PersonDTO person){
         logger.info("creating person with name: " + person.getFirstName());
         var entity = personMapper.personDTOtoPerson(person);
-        personRepository.save(entity);
-        return personMapper.personToPersonDTO(entity);
+        var personDto = personMapper.personToPersonDTO(entity);
+        personDto.add(linkTo(methodOn(PersonController.class).findById(personDto.getKey())).withSelfRel());
+        return personDto;
     }
 
     public PersonDTO update(PersonDTO person){
-        logger.info("updating person with Id: " + person.getId());
+        logger.info("updating person with Id: " + person.getKey());
 
-        var entity = personRepository.findById(person.getId())
+        var entity = personRepository.findById(person.getKey())
         .orElseThrow(() -> new ResourceNotFoundException("no records found for this ID"));
 
         entity.setFirstName(person.getFirstName());
@@ -55,8 +65,9 @@ public class PersonService {
         entity.setGender(person.getGender());
 
         personRepository.save(entity);
-
-        return personMapper.personToPersonDTO(entity);
+        var personDto = personMapper.personToPersonDTO(entity);
+        personDto.add(linkTo(methodOn(PersonController.class).findById(personDto.getKey())).withSelfRel());
+        return personDto;
     }
 
     public void delete(Long id){
