@@ -48,6 +48,7 @@ public class PersonService {
     public PersonDTO create(PersonDTO person){
         logger.info("creating person with name: " + person.getFirstName());
         var entity = personMapper.personDTOtoPerson(person);
+        personRepository.save(entity);
         var personDto = personMapper.personToPersonDTO(entity);
         personDto.add(linkTo(methodOn(PersonController.class).findById(personDto.getKey())).withSelfRel());
         return personDto;
