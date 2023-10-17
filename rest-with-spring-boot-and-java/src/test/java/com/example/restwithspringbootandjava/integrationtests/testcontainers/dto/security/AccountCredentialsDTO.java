@@ -1,4 +1,4 @@
-package com.example.restwithspringbootandjava.dto.v1.security;
+package com.example.restwithspringbootandjava.integrationtests.testcontainers.dto.security;
 
 import java.io.Serializable;
 
