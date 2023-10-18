@@ -1,7 +1,9 @@
 package com.example.restwithspringbootandjava.integrationtests.testcontainers.controller.withjson;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -102,6 +104,7 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 assertEquals("Stallman", createdPerson.getLastName());
                 assertEquals("New York", createdPerson.getAddress());
                 assertEquals("Male", createdPerson.getGender());
+                assertTrue(createdPerson.getEnabled());
         }
 
         @Test
@@ -157,6 +160,7 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 assertEquals("Stallman", persistedPersonDTO.getLastName());
                 assertEquals("New York", persistedPersonDTO.getAddress());
                 assertEquals("Male", persistedPersonDTO.getGender());
+                assertTrue(persistedPersonDTO.getEnabled());
         }
 
         @Test
@@ -181,11 +185,46 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 assertEquals("Invalid CORS request", content);
         }
 
+        @Test
+        @Order(5)
+        public void testDisableById() throws JsonMappingException, JsonProcessingException {
+     
+                var content = given().spec(specification)
+                                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                                .header(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_LOCALHOST_8080)
+                                .pathParam("id", personDTO.getId())
+                                .when()
+                                .patch("{id}")
+                                .then()
+                                .statusCode(200)
+                                .extract()
+                                .body()
+                                .asString();
+
+                PersonDTO persistedPersonDTO = objectMapper.readValue(content, PersonDTO.class);
+                personDTO = persistedPersonDTO;
+
+                assertNotNull(persistedPersonDTO);
+                assertNotNull(persistedPersonDTO.getId());
+                assertNotNull(persistedPersonDTO.getFirstName());
+                assertNotNull(persistedPersonDTO.getLastName());
+                assertNotNull(persistedPersonDTO.getAddress());
+                assertNotNull(persistedPersonDTO.getGender());
+                assertFalse(persistedPersonDTO.getEnabled());
+
+                assertEquals("Richard", persistedPersonDTO.getFirstName());
+                assertEquals("Stallman", persistedPersonDTO.getLastName());
+                assertEquals("New York", persistedPersonDTO.getAddress());
+                assertEquals("Male", persistedPersonDTO.getGender());
+        }
+
+
         private void mockPerson() {
                 personDTO.setFirstName("Richard");
                 personDTO.setLastName("Stallman");
                 personDTO.setAddress("New York");
                 personDTO.setGender("Male");
+                personDTO.setEnabled(true);
         }
 
 }

@@ -28,6 +28,8 @@ public class Person implements Serializable {
     private String address;
     @Column(name = "gender", nullable = false)
     private String gender;
+    @Column(name = "enabled", nullable = false)
+    private Boolean enabled;
     
     public Person(String firstName, String lastName, String address, String gender) {
         this.firstName = firstName;

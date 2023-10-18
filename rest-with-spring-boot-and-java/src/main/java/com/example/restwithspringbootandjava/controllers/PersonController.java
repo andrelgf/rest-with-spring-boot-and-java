@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -108,6 +109,26 @@ public class PersonController {
     })
     public PersonDTO update(@RequestBody PersonDTO person) {
         return personService.update(person);
+    }
+
+    @PatchMapping(value = "/{id}")
+    @Operation(summary = "Disables person with id", description = "Disables person with id", 
+    tags = {"People"},
+    responses = {
+        @ApiResponse(description = "Success", responseCode = "200", 
+        content = 
+            @Content (
+                mediaType = "application/json",
+                schema = @Schema(implementation = PersonDTO.class))
+            ),
+        @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
+        @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+        @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
+        @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+        @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content),
+    })
+    public PersonDTO disablePerson(@PathVariable(value = "id") Long id) {
+        return personService.disablePerson(id);
     }
 
     @DeleteMapping(value = "/{id}")

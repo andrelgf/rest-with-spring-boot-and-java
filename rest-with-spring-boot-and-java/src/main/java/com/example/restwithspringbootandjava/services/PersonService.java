@@ -14,6 +14,8 @@ import com.example.restwithspringbootandjava.exceptions.ResourceNotFoundExceptio
 import com.example.restwithspringbootandjava.mapper.PersonMapper;
 import com.example.restwithspringbootandjava.repositories.PersonRepository;
 
+import jakarta.transaction.Transactional;
+
 
 
 @Service
@@ -68,6 +70,17 @@ public class PersonService {
         personRepository.save(entity);
         var personDto = personMapper.personToPersonDTO(entity);
         personDto.add(linkTo(methodOn(PersonController.class).findById(personDto.getKey())).withSelfRel());
+        return personDto;
+    }
+
+    @Transactional
+    public PersonDTO disablePerson(Long id){
+        logger.info("Disabling person with id: " + id);
+        personRepository.disablePerson(id);
+        var entity = personRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("no records found for this ID"));
+        var personDto = personMapper.personToPersonDTO(entity);
+        personDto.add(linkTo(methodOn(PersonController.class).findById(id)).withSelfRel());
         return personDto;
     }
 

@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@JsonPropertyOrder({"id", "firstName", "lastName" ,"address", "gender"})
+@JsonPropertyOrder({"id", "firstName", "lastName" ,"address", "gender", "enabled"})
 public class PersonDTO extends RepresentationModel<PersonDTO> implements Serializable {
     
     @JsonProperty("id")
@@ -21,5 +21,5 @@ public class PersonDTO extends RepresentationModel<PersonDTO> implements Seriali
     private String lastName;
     private String address;
     private String gender;
-   
+    private Boolean enabled;
 }
