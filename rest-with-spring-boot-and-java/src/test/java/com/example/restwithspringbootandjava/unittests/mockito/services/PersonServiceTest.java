@@ -1,6 +1,6 @@
 package com.example.restwithspringbootandjava.unittests.mockito.services;
 
-
+import com.example.restwithspringbootandjava.controllers.PersonController;
 import com.example.restwithspringbootandjava.dto.v1.PersonDTO;
 import com.example.restwithspringbootandjava.exceptions.ResourceNotFoundException;
 import com.example.restwithspringbootandjava.mapper.PersonMapper;
@@ -11,13 +11,29 @@ import com.example.restwithspringbootandjava.unittests.mapper.mocks.MockPerson;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,6 +47,9 @@ public class PersonServiceTest {
 
     @Mock
     private PersonMapper personMapper;
+
+    @Mock
+    private PagedResourcesAssembler<PersonDTO> pagedResourcesAssembler;
 
     MockPerson input;
 
@@ -69,22 +88,62 @@ public class PersonServiceTest {
         verifyNoMoreInteractions(personMapper);
     }
 
-    // @Test
-    // public void testFindAll() {
-    //     List<Person> personList = input.mockEntityList();
-
-    //     List<PersonDTO> personDTOList = input.mockDTOList();
-
-    //     when(personRepository.findAll()).thenReturn(personList);
-    //     when(personMapper.personListToPersonDTOList(personList)).thenReturn(personDTOList);
-
-    //     List<PersonDTO> result = personService.findAll();
-
-    //     assertNotNull(result);
-    //     assertEquals(personList.size(), result.size());
-    //     verify(personRepository, times(1)).findAll();
-    //     verify(personMapper, times(1)).personListToPersonDTOList(personList);
-    // }
+    @Test
+    public void testFindAll() {
+        // Mock data
+        Pageable pageable = mock(Pageable.class);
+        List<Person> personList = input.mockEntityList();
+        Page<Person> personPage = new PageImpl<>(personList);
+    
+        when(personRepository.findAll(pageable)).thenReturn(personPage);
+    
+        // Mock mapping
+        List<PersonDTO> personDTOList = input.mockDTOList();
+        when(personMapper.personToPersonDTO(any())).thenReturn(personDTOList.get(0));
+    
+        // Mock link creation
+        Link selfLink = linkTo(
+            methodOn(PersonController.class).findAll(
+                pageable.getPageNumber(), pageable.getPageSize(), "asc")).withSelfRel();
+    
+        // Mocking PagedModel<EntityModel<PersonDTO>>
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(
+            pageable.getPageSize(), personPage.getNumber(), personPage.getTotalElements());
+        List<EntityModel<PersonDTO>> entityModelList = new ArrayList<>();
+        
+        for (PersonDTO personDTO : personDTOList) {
+            EntityModel<PersonDTO> entityModel = EntityModel.of(personDTO);
+            entityModel.add(selfLink); // Adding self link to each entity model
+            entityModelList.add(entityModel);
+        }
+    
+        PagedModel<EntityModel<PersonDTO>> mockedPagedModel = PagedModel.of(
+            entityModelList, metadata, selfLink);
+    
+        when(pagedResourcesAssembler.toModel(
+                any(Page.class), 
+                any(Link.class)))
+            .thenReturn(mockedPagedModel);
+    
+        // Call the method
+        PagedModel<EntityModel<PersonDTO>> result = personService.findAll(pageable);
+    
+        // Assertions or verifications based on your specific logic
+        assertNotNull(result); // Add assertions as needed based on your specific logic
+    
+        // Verify that the repository method was called
+        verify(personRepository, times(1)).findAll(pageable);
+    
+        // Verify that the mapping method was called
+        verify(personMapper, times(personList.size())).personToPersonDTO(any());
+    
+        // Verify that the link creation method was called
+        verify(pagedResourcesAssembler, times(1))
+            .toModel(any(Page.class), any(Link.class));
+    
+        // Add assertions as needed based on your specific logic
+    }
+    
 
     @Test
     public void testCreate() {
@@ -93,7 +152,7 @@ public class PersonServiceTest {
 
         when(personMapper.personDTOtoPerson(personDTO)).thenReturn(person);
         when(personMapper.personToPersonDTO(person)).thenReturn(personDTO);
-        
+
         PersonDTO result = personService.create(personDTO);
 
         assertNotNull(result);
