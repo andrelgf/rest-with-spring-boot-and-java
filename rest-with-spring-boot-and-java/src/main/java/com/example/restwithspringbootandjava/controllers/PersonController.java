@@ -1,7 +1,6 @@
 package com.example.restwithspringbootandjava.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -65,6 +64,36 @@ public class PersonController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, "firstName"));
 
         return ResponseEntity.ok(personService.findAll(pageable));
+    }
+
+    @GetMapping(value = "/findPersonsByName/{firstName}")
+    @Operation(summary = "finds Persons by first name", description = "finds Persons by first name", 
+    tags = {"People"},
+    responses = {
+        @ApiResponse(description = "Success", responseCode = "200", 
+        content = {
+            @Content (
+                mediaType = "application/json",
+                array = @ArraySchema(schema = @Schema(implementation = PersonDTO.class))
+            )
+        }),
+        @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+        @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
+        @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+        @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content),
+    })
+    public ResponseEntity<PagedModel<EntityModel<PersonDTO>>> findPersonsByName(
+        @PathVariable(value = "firstName") String firstName,
+        @RequestParam(value = "page", defaultValue = "0") Integer page,
+        @RequestParam(value = "size", defaultValue = "12") Integer size,
+        @RequestParam(value = "direction", defaultValue = "asc") String direction
+        ) {
+
+        var sortDirection = "desc".equalsIgnoreCase(direction) ? Direction.DESC : Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, "firstName"));
+
+        return ResponseEntity.ok(personService.findPersonsByName(firstName, pageable));
     }
 
     @GetMapping(value = "/{id}")

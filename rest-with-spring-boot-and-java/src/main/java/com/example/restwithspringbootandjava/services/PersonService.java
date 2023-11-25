@@ -60,6 +60,21 @@ public class PersonService {
         return pagedResourcesAssembler.toModel(personDtoPage, link);
     }
 
+    public PagedModel<EntityModel<PersonDTO>> findPersonsByName(String firstName, Pageable pageable){
+        logger.info("listing all people");
+
+        var personPage = personRepository.findPersonsByName(firstName, pageable);
+        
+        var personDtoPage = personPage.map(p -> personMapper.personToPersonDTO(p));
+        personDtoPage.map(p -> p.add(linkTo(methodOn(PersonController.class).findById(p.getKey())).withSelfRel()));
+        
+        Link link = linkTo(
+            methodOn(PersonController.class).findAll(
+                pageable.getPageNumber(), pageable.getPageSize(), "asc")).withSelfRel();
+
+        return pagedResourcesAssembler.toModel(personDtoPage, link);
+    }
+
     public PersonDTO create(PersonDTO person){
         logger.info("creating person with name: " + person.getFirstName());
         var entity = personMapper.personDTOtoPerson(person);
