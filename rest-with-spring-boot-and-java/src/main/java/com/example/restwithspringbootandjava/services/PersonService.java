@@ -1,11 +1,16 @@
 package com.example.restwithspringbootandjava.services;
 
-import java.util.List;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 
 import com.example.restwithspringbootandjava.controllers.PersonController;
@@ -28,6 +33,8 @@ public class PersonService {
     private PersonRepository personRepository;
     @Autowired
     private PersonMapper personMapper;
+    @Autowired
+    private PagedResourcesAssembler<PersonDTO> pagedResourcesAssembler;
 
     public PersonDTO findById(Long id){
         logger.info("finding person with Id: " + id);
@@ -38,13 +45,19 @@ public class PersonService {
         return personDto;
     }
 
-    public List<PersonDTO> findAll(){
+    public PagedModel<EntityModel<PersonDTO>> findAll(Pageable pageable){
         logger.info("listing all people");
-        var persons = personMapper.personListToPersonDTOList(personRepository.findAll());
-        persons.
-        stream()
-        .forEach(p -> p.add(linkTo(methodOn(PersonController.class).findById(p.getKey())).withSelfRel()));
-        return persons;
+
+        var personPage = personRepository.findAll(pageable);
+        
+        var personDtoPage = personPage.map(p -> personMapper.personToPersonDTO(p));
+        personDtoPage.map(p -> p.add(linkTo(methodOn(PersonController.class).findById(p.getKey())).withSelfRel()));
+        
+        Link link = linkTo(
+            methodOn(PersonController.class).findAll(
+                pageable.getPageNumber(), pageable.getPageSize(), "asc")).withSelfRel();
+
+        return pagedResourcesAssembler.toModel(personDtoPage, link);
     }
 
     public PersonDTO create(PersonDTO person){

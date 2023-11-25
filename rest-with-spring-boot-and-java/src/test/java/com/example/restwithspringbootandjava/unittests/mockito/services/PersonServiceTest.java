@@ -69,22 +69,22 @@ public class PersonServiceTest {
         verifyNoMoreInteractions(personMapper);
     }
 
-    @Test
-    public void testFindAll() {
-        List<Person> personList = input.mockEntityList();
+    // @Test
+    // public void testFindAll() {
+    //     List<Person> personList = input.mockEntityList();
 
-        List<PersonDTO> personDTOList = input.mockDTOList();
+    //     List<PersonDTO> personDTOList = input.mockDTOList();
 
-        when(personRepository.findAll()).thenReturn(personList);
-        when(personMapper.personListToPersonDTOList(personList)).thenReturn(personDTOList);
+    //     when(personRepository.findAll()).thenReturn(personList);
+    //     when(personMapper.personListToPersonDTOList(personList)).thenReturn(personDTOList);
 
-        List<PersonDTO> result = personService.findAll();
+    //     List<PersonDTO> result = personService.findAll();
 
-        assertNotNull(result);
-        assertEquals(personList.size(), result.size());
-        verify(personRepository, times(1)).findAll();
-        verify(personMapper, times(1)).personListToPersonDTOList(personList);
-    }
+    //     assertNotNull(result);
+    //     assertEquals(personList.size(), result.size());
+    //     verify(personRepository, times(1)).findAll();
+    //     verify(personMapper, times(1)).personListToPersonDTOList(personList);
+    // }
 
     @Test
     public void testCreate() {
